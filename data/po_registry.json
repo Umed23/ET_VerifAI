@@ -1,0 +1,5 @@
+[
+    {"po_number": "PO-2026-5847", "vendor": "Acme Corp", "amount": 1250.00},
+    {"po_number": "PO-2026-1002", "vendor": "TechSupply", "amount": 500.00},
+    {"po_number": "PO-2026-9931", "vendor": "Global Logistics", "amount": 4500.00}
+]

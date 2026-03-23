@@ -1,0 +1,19 @@
+# --- Core Agent Orchestration ---
+langgraph==0.0.39
+langchain==0.1.13
+langchain-anthropic==0.1.4
+
+# --- LLM & API ---
+anthropic==0.21.3
+python-dotenv==1.0.1
+
+# --- Data Processing & Vector Search (Self-Healing) ---
+faiss-cpu==1.8.0
+sentence-transformers==2.6.1
+pypdf==4.1.0
+python-docx==1.1.0
+
+# --- Validation & UI ---
+pydantic==2.6.4
+streamlit==1.32.2
+pandas==2.2.1

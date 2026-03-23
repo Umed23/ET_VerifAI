@@ -1,0 +1,23 @@
+[
+  {
+    "employee_id": "EMP-001",
+    "full_name": "Umed Jogi",
+    "role": "Software Engineer",
+    "department": "Engineering",
+    "status": "Active"
+  },
+  {
+    "employee_id": "EMP-002",
+    "full_name": "Maria Garcia",
+    "role": "Product Manager",
+    "department": "Product",
+    "status": "Onboarding"
+  },
+  {
+    "employee_id": "EMP-003",
+    "full_name": "Alex Chen",
+    "role": "Data Scientist",
+    "department": "AI Labs",
+    "status": "Active"
+  }
+]

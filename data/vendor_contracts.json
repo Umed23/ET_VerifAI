@@ -1,0 +1,5 @@
+{
+    "approved_vendors": ["Acme Corp", "TechSupply", "Global Logistics"],
+    "budget_remaining": 5000.00,
+    "max_variance_percent": 5
+}
