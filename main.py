@@ -2,6 +2,8 @@ import sys
 import time
 from langgraph.graph import StateGraph, END
 from state import AgentState
+
+# Import all agents
 from agents.coordinator import coordinator_agent
 from agents.extraction import extraction_agent
 from agents.matching import matching_agent
@@ -9,23 +11,33 @@ from agents.compliance import compliance_agent
 from agents.execution import execution_agent
 from agents.health_monitor import monitor_agent
 
-# Add clarification gate (mock human-in-the-loop)
+# --- ✋ CLARIFICATION GATE (Human-in-the-Loop) ---
 def clarification_gate(state: AgentState):
-    print("--- ✋ CLARIFICATION GATE (Human-in-the-Loop) ---")
+    print("--- ✋ CLARIFICATION GATE: Human Review Required ---")
     
-    # In a real UI, this would pause and wait for input
-    # For demo, it logs the escalation and stops execution
+    current_logs = state.get("audit_log", [])
+    errors = state.get("errors", [])
+    
     log_entry = {
         "agent": "Clarification Gate",
-        "event": "Human Review Required",
-        "details": f"Escalated due validations failing in prior steps."
+        "event": "Escalated",
+        "details": f"Paused for human review due to: {', '.join(errors) if errors else 'Low confidence'}",
+        "timestamp": time.time()
     }
-    return {"audit_log": [log_entry], "status": "escalated"}
+    
+    # We return the escalated status so the monitor can report it
+    return {
+        "audit_log": current_logs + [log_entry], 
+        "status": "escalated",
+        "next_step": "monitor"
+    }
 
-# 1. Build workflow
+# ==========================================
+# 1. BUILD THE DYNAMIC WORKFLOW
+# ==========================================
 workflow = StateGraph(AgentState)
 
-# 2. Add agents
+# Add Nodes
 workflow.add_node("coordinator", coordinator_agent)
 workflow.add_node("extraction", extraction_agent)
 workflow.add_node("matching", matching_agent)
@@ -34,126 +46,97 @@ workflow.add_node("execution", execution_agent)
 workflow.add_node("clarification_gate", clarification_gate)
 workflow.add_node("monitor", monitor_agent)
 
-# 3. Set entry and edges
+# --- Define Edges & Conditional Routing ---
+
 workflow.set_entry_point("coordinator")
 workflow.add_edge("coordinator", "extraction")
 
-# Conditional routing from extraction
-def route_after_extraction(state: AgentState):
-    return state.get("next_step", "matching")
+# Router logic: Checks if the previous agent flagged an escalation
+def router(state: AgentState):
+    if state.get("status") in ["escalated", "failed"]:
+        return "clarification_gate"
+    return state.get("next_step", "end")
 
-workflow.add_conditional_edges("extraction", route_after_extraction, {
+workflow.add_conditional_edges("extraction", router, {
     "matching": "matching",
     "clarification_gate": "clarification_gate"
 })
 
-def route_after_matching(state: AgentState):
-    return state.get("next_step", "compliance")
-
-workflow.add_conditional_edges("matching", route_after_matching, {
+workflow.add_conditional_edges("matching", router, {
     "compliance": "compliance",
     "clarification_gate": "clarification_gate"
 })
 
-def route_after_compliance(state: AgentState):
-    return state.get("next_step", "execution")
-
-workflow.add_conditional_edges("compliance", route_after_compliance, {
+workflow.add_conditional_edges("compliance", router, {
     "execution": "execution",
     "clarification_gate": "clarification_gate"
 })
 
-def route_after_execution(state: AgentState):
-    return state.get("next_step", "monitor")
-
-workflow.add_conditional_edges("execution", route_after_execution, {
+workflow.add_conditional_edges("execution", router, {
     "monitor": "monitor",
-    "execution": "execution",
     "clarification_gate": "clarification_gate"
 })
 
-# Let the health monitor always log the final state (even if escalated)
+# Both paths eventually lead to the Monitor for ROI reporting
 workflow.add_edge("clarification_gate", "monitor")
 workflow.add_edge("monitor", END)
 
-# 4. Compile
 app = workflow.compile()
 
-# ANSI Colors for Wow Factor Terminal
+# ==========================================
+# 2. UI COLORS & DEMO SCRIPT
+# ==========================================
 class CLR:
-    HEADER = '\033[95m'
-    OKBLUE = '\033[94m'
-    OKCYAN = '\033[96m'
-    OKGREEN = '\033[92m'
-    WARNING = '\033[93m'
-    FAIL = '\033[91m'
-    ENDC = '\033[0m'
-    BOLD = '\033[1m'
+    HEADER, OKBLUE, OKCYAN = '\033[95m', '\033[94m', '\033[96m'
+    OKGREEN, WARNING, FAIL = '\033[92m', '\033[93m', '\033[91m'
+    ENDC, BOLD = '\033[0m', '\033[1m'
 
-# 5. DEMO/TEST
 if __name__ == "__main__":
-    print(f"{CLR.OKCYAN}{CLR.BOLD}" + "=" * 70)
-    print("🔥 VERIFAI: 6-AGENT AUTONOMOUS SYSTEM WITH LANGCHAIN TOOLS 🔥")
-    print("=" * 70 + f"{CLR.ENDC}")
+    print(f"{CLR.OKCYAN}{CLR.BOLD}{'='*70}\n🛡️  VERIFAI: 6-AGENT AUTONOMOUS ORCHESTRATOR\n{'='*70}{CLR.ENDC}")
     
-    # Test with a typo to trigger FAISS self-correction
+    # Simulation: Invoice with a typo to trigger FAISS
     test_input = {
-        "task_id": "DEMO-001",
+        "task_id": f"DEMO-{int(time.time())}",
+        "start_time": time.time(),
         "raw_input": "Invoice from Acme Corp. Total $1250. PO Number: PO-2026-5846",
+        "workflow_type": "p2p",
+        "extracted_data": {},
         "audit_log": [],
+        "errors": [],
         "retry_count": 0,
         "correction_flag": False,
-        "status": "initiated",
-        "next_step": "coordinator"
+        "status": "initiated"
     }
     
-    print(f"\n{CLR.HEADER}📥 Input:{CLR.ENDC}")
-    print(f"  Raw: {test_input['raw_input']}")
-    print(f"  Task ID: {test_input['task_id']}")
-    
-    print(f"\n{CLR.WARNING}🔄 Executing workflow...{CLR.ENDC}")
-    start_time = time.time()
+    print(f"\n{CLR.HEADER}📥 INPUT DOC:{CLR.ENDC} {test_input['raw_input']}")
+    print(f"{CLR.WARNING}🔄 ORCHESTRATING AGENTS...{CLR.ENDC}\n")
     
     final_state = app.invoke(test_input)
     
-    elapsed = time.time() - start_time
+    # --- Final Presentation Display ---
+    print(f"\n{CLR.OKGREEN}{CLR.BOLD}{'='*70}\n🏆 CHAMPIONSHIP SUMMARY\n{'='*70}{CLR.ENDC}")
     
-    # Display results
-    print("\n" + f"{CLR.OKGREEN}{CLR.BOLD}" + "=" * 70)
-    print("✅ FINAL RESULTS")
-    print("=" * 70 + f"{CLR.ENDC}")
+    status = final_state.get('status', 'unknown').upper()
+    s_clr = CLR.OKGREEN if status == "COMPLETED" else CLR.WARNING if status == "ESCALATED" else CLR.FAIL
     
-    status_clr = CLR.OKGREEN if final_state.get('status') == 'completed' else CLR.FAIL
-    print(f"\nStatus: {status_clr}{final_state.get('status', 'unknown').upper()}{CLR.ENDC}")
-    print(f"Workflow Type: {final_state.get('workflow_type', 'unknown').upper()}")
-    print(f"Processing Time: {elapsed:.2f} seconds")
+    print(f"STATUS: {s_clr}{status}{CLR.ENDC}")
+    print(f"WORKFLOW: {final_state.get('workflow_type', 'N/A').upper()}")
     
-    print(f"\n{CLR.OKBLUE}📋 Extracted Data:{CLR.ENDC}")
-    for key, value in final_state.get('extracted_data', {}).items():
-        print(f"  {key}: {value}")
-    
-    print(f"\n{CLR.OKBLUE}🏥 Self-Healing Actions:{CLR.ENDC}")
-    corrections = sum(1 for e in final_state.get('audit_log', []) if e.get('correction_flag'))
-    recoveries = sum(1 for e in final_state.get('audit_log', []) if e.get('recovery_used'))
-    print(f"  {CLR.OKGREEN}Corrections:{CLR.ENDC} {corrections}")
-    print(f"  {CLR.OKGREEN}Recoveries:{CLR.ENDC} {recoveries}")
-    
-    print(f"\n{CLR.WARNING}📊 Metrics:{CLR.ENDC}")
-    autonomy = 100 if final_state.get('status') == 'completed' else 50 if final_state.get('status') == 'escalated' else 0
-    print(f"  Autonomy: {autonomy}%")
-    print(f"  Savings/TX: $3.99")
-    print(f"  Annual: $3,990")
-    
-    print(f"\n{CLR.HEADER}📑 AUDIT TRAIL ({len(final_state.get('audit_log', []))} decisions):{CLR.ENDC}")
+    # 🏥 Self-Healing Proof
+    if final_state.get('correction_flag'):
+        print(f"{CLR.OKCYAN}✨ SELF-HEALING: Applied (Semantic FAISS Correction){CLR.ENDC}")
+
+    # 📊 Metrics (From Agent 6)
+    metrics = final_state.get('audit_log', [])[-1].get('metrics', {})
+    if metrics:
+        print(f"\n{CLR.BOLD}📊 PERFORMANCE METRICS:{CLR.ENDC}")
+        print(f"  • Autonomy: {metrics.get('autonomy_score')}%")
+        print(f"  • Savings: ${metrics.get('net_savings_usd')}")
+        print(f"  • Speed: {metrics.get('processing_time_sec')}s")
+
+    # 📑 Audit Trail
+    print(f"\n{CLR.BOLD}📑 AUDIT TRAIL:{CLR.ENDC}")
     for i, entry in enumerate(final_state.get('audit_log', []), 1):
-        print(f"\n  {CLR.BOLD}Decision #{i}: [{entry.get('agent')}]{CLR.ENDC}")
-        print(f"    Event: {entry.get('event')}")
-        print(f"    Details: {entry.get('details')}")
-        if entry.get('correction_flag'):
-            print(f"    {CLR.OKCYAN}✅ FAISS Self-Correction Applied{CLR.ENDC}")
-        if entry.get('recovery_used'):
-            print(f"    {CLR.WARNING}✅ API Error Retry Recovery Applied{CLR.ENDC}")
-    
-    print("\n" + f"{CLR.OKGREEN}{CLR.BOLD}" + "=" * 70)
-    print("🏆 Championship-Level Submission Ready!")
-    print("=" * 70 + f"{CLR.ENDC}")
+        print(f"  {i}. [{entry.get('agent')}] -> {entry.get('event')}")
+
+    print(f"\n{CLR.OKGREEN}{CLR.BOLD}{'='*70}{CLR.ENDC}")

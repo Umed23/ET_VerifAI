@@ -40,7 +40,7 @@ def coordinator_agent(state: AgentState):
     risk = min(risk, 1.0)
 
     # Model routing
-    selected_llm = "Claude-3-Opus" if risk > 0.8 else "Claude-3-Haiku"
+    selected_llm = "gemini-2.5-pro" if risk > 0.8 else "gemini-2.5-flash"
 
     log_entry = {
         "agent": "Coordinator",

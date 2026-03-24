@@ -5,23 +5,30 @@ try:
 except ImportError:
     from pydantic import BaseModel, Field
 
+from typing import Optional, List
+
 class P2PExtraction(BaseModel):
-    vendor: str = Field(description="The name of the vendor or supplier")
-    amount: float = Field(description="The total payment amount")
-    po_number: str = Field(description="The Purchase Order number")
+    vendor: Optional[str] = Field(None, description="The name of the vendor or supplier")
+    amount: Optional[float] = Field(None, description="The total payment amount")
+    po_number: Optional[str] = Field(None, description="The Purchase Order number")
 
 class OnboardingExtraction(BaseModel):
-    candidate: str = Field(description="The name of the candidate")
-    role: str = Field(description="The job role offered")
-    start_date: str = Field(description="The start date of the employee")
+    candidate: Optional[str] = Field(None, description="The name of the candidate")
+    role: Optional[str] = Field(None, description="The job role offered")
+    start_date: Optional[str] = Field(None, description="The start date of the employee")
+
+class MeetingExtraction(BaseModel):
+    topic: Optional[str] = Field(None, description="The main topic of the meeting")
+    action_items: Optional[List[str]] = Field(None, description="List of action items")
+
 
 @tool
-def extract_entity_data(text: str, workflow_type: str) -> dict:
+def extract_entity_data(text: str, workflow_type: str, model: str = "gemini-2.5-flash") -> dict:
     """
     Extracts structured data (vendor, amount, PO, etc.) from raw document text using an LLM.
     Returns the extracted data and an LLM confidence score.
     """
-    api_key = os.getenv("ANTHROPIC_API_KEY")
+    api_key = os.getenv("GEMINI_API_KEY")
     
     if not api_key:
         # Fallback simulation if no API key is provided
@@ -35,21 +42,23 @@ def extract_entity_data(text: str, workflow_type: str) -> dict:
         return {"extracted": result, "confidence": 0.85}
 
     try:
-        from langchain_anthropic import ChatAnthropic
+        from langchain_google_genai import ChatGoogleGenerativeAI
         # Real LLM Extraction Implementation!
-        llm = ChatAnthropic(model="claude-3-haiku-20240307", temperature=0)
+        llm = ChatGoogleGenerativeAI(model=model, temperature=0, google_api_key=api_key)
         
         if workflow_type == "p2p":
             structured_llm = llm.with_structured_output(P2PExtraction)
         elif workflow_type == "onboarding":
             structured_llm = llm.with_structured_output(OnboardingExtraction)
         else:
-            return {"extracted": {"topic": "Meeting", "action_items": []}, "confidence": 0.5}
+            structured_llm = llm.with_structured_output(MeetingExtraction)
             
         res = structured_llm.invoke(f"Extract details from this text:\n\n{text}")
         return {"extracted": res.dict(), "confidence": 0.95}
         
     except Exception as e:
+        import traceback
+        with open("err.txt", "w") as f: f.write(traceback.format_exc())
         print(f"Extraction Error: {str(e)}")
         # If the LLM call fails, we ensure the system can escalate appropriately
         return {"extracted": {}, "confidence": 0.0}
