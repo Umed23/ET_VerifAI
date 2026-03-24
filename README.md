@@ -131,73 +131,16 @@ Developed for the 2026 AI Hackathon. VerifAI aims to redefine how enterprises ha
 ## DIAGRAM 1: Complete System Architecture (High Level)
 
 ```mermaid
-graph TB
-    subgraph INPUT["📥 INPUT LAYER"]
-        PDF["PDF Files"]
-        DOCX["DOCX Files"]
-        TXT["TXT Files"]
-    end
-    
-    INPUT -->|extract_text_from_upload| PROCESSOR["📋 Processor<br/>(processor.py)"]
-    
-    PROCESSOR -->|raw_text| STATE["🔄 AgentState<br/>(state.py)"]
-    
-    STATE -->|raw_input| COORD["🤖 Agent 1: COORDINATOR<br/>(coordinator.py)"]
-    
-    COORD -->|workflow_type<br/>risk_score<br/>confidence| STATE
-    
-    STATE -->|extracted_data| EXTRACT["🔍 Agent 2: EXTRACTION<br/>(extraction.py)"]
-    
-    EXTRACT -->|extracted_data<br/>confidence_score| STATE
-    
-    STATE -->|extracted_data| MATCH["🔗 Agent 3: MATCHING<br/>(matching.py)"]
-    
-    MATCH -->|extracted_data<br/>correction_flag| STATE
-    
-    STATE -->|extracted_data| COMP["⚖️ Agent 4: COMPLIANCE<br/>(compliance.py)"]
-    
-    COMP -->|status<br/>errors| STATE
-    
-    STATE -->|extracted_data<br/>status| EXEC["🚀 Agent 5: EXECUTION<br/>(execution.py)"]
-    
-    EXEC -->|status<br/>errors| STATE
-    
-    STATE -->|status<br/>audit_log| HEALTH["📉 Agent 6: HEALTH MONITOR<br/>(health_monitor.py)"]
-    
-    HEALTH -->|autonomy_score<br/>metrics| STATE
-    
-    STATE -->|final_state| APP["🎨 Streamlit App<br/>(app.py)"]
-    
-    APP -->|Display| BROWSER["🌐 Web Browser<br/>Beautiful UI"]
-    
-    style INPUT fill:#2d333b
-    style PROCESSOR fill:#238636
-    style STATE fill:#3b434b
-    style COORD fill:#1f6feb
-    style EXTRACT fill:#1f6feb
-    style MATCH fill:#1f6feb
-    style COMP fill:#1f6feb
-    style EXEC fill:#1f6feb
-    style HEALTH fill:#1f6feb
-    style APP fill:#238636
-    style BROWSER fill:#3b434b
-```
-
----
-
-## DIAGRAM 2: Agent 1 - COORDINATOR (Detailed)
-
-```mermaid
 graph LR
-    INPUT["📥 raw_input<br/>(Document text)"]
+    INPUT["📥 raw_input (Document text)"]
     
     INPUT -->|Parse text| CLASSIFY{Workflow Type?}
     
-    CLASSIFY -->|Contains 'invoice'<br/>'PO#', 'billing'| P2P["P2P<br/>confidence:0.9"]
-    CLASSIFY -->|Contains 'hire'<br/>'onboarding'| ONBOARD["ONBOARDING<br/>confidence:0.9"]
-    CLASSIFY -->|Contains 'contract'<br/>'agreement'| LEGAL["LEGAL<br/>confidence:0.85"]
-    CLASSIFY -->|Contains 'expense'<br/>'receipt'| EXPENSE["EXPENSE<br/>confidence:0.88"]
-    CLASSIFY -->|Default| MEETING["MEETING<br/>confidence:0.6"]
+    CLASSIFY -->|invoice / PO / billing| P2P["P2P<br/>confidence: 0.9"]
+    CLASSIFY -->|hire / onboarding| ONBOARD["ONBOARDING<br/>confidence: 0.9"]
+    CLASSIFY -->|contract / agreement| LEGAL["LEGAL<br/>confidence: 0.85"]
+    CLASSIFY -->|expense / receipt| EXPENSE["EXPENSE<br/>confidence: 0.88"]
+    CLASSIFY -->|default| MEETING["MEETING<br/>confidence: 0.6"]
     
     P2P --> RISK["💰 Risk Scoring"]
     ONBOARD --> RISK
@@ -205,50 +148,40 @@ graph LR
     EXPENSE --> RISK
     MEETING --> RISK
     
-    RISK -->|Parse amounts| AMOUNT["Extract max amount<br/>from currency symbols<br/>₹, $, Rs., USD"]
+    RISK --> AMOUNT["Extract Amount<br/>₹ / $ / Rs"]
     
-    AMOUNT -->|Calculate risk| FORMULA["risk = min(1.0,<br/>0.3 + amount/50000)"]
+    AMOUNT --> FORMULA["risk = min(1.0, 0.3 + amount / 50000)"]
     
-    FORMULA -->|Check keywords| KEYWORDS{Urgent?}
+    FORMULA --> KEYWORDS{Urgent Keywords?}
     
-    KEYWORDS -->|Yes: urgent<br/>critical, immediate| UPGRADE["risk += 0.2"]
-    KEYWORDS -->|No| NOUPGRADE["risk unchanged"]
+    KEYWORDS -->|Yes| UPGRADE["risk + 0.2"]
+    KEYWORDS -->|No| NOUPGRADE["no change"]
     
-    UPGRADE --> finalRISK["Final risk_score<br/>0.0 to 1.0"]
-    NOUPGRADE --> finalRISK
+    UPGRADE --> FINALRISK["Final Risk Score"]
+    NOUPGRADE --> FINALRISK
     
-    finalRISK -->|Select LLM| LLMSELECT{Risk > 0.8?}
+    FINALRISK --> LLMSELECT{Risk > 0.8?}
     
-    LLMSELECT -->|Yes| OPUS["Claude-3-Opus<br/>(Better reasoning)"]
-    LLMSELECT -->|No| HAIKU["Claude-3-Haiku<br/>(Fast)"]
+    LLMSELECT -->|Yes| OPUS["Claude Opus (Accurate)"]
+    LLMSELECT -->|No| HAIKU["Claude Haiku (Fast)"]
     
     OPUS --> LOG["📋 Log Decision"]
     HAIKU --> LOG
     
-    LOG -->|Agent: Coordinator<br/>Event: Workflow Routed<br/>Details: type|risk|model<br/>Timestamp: time.time()| STATE["🔄 Update State"]
+    LOG --> STATE["Update State<br/>workflow + risk + model + timestamp"]
     
-    STATE -->|Return:<br/>task_id<br/>workflow_type<br/>risk_score<br/>confidence<br/>selected_llm<br/>audit_log[]| OUTPUT["✅ Output"]
+    STATE --> OUTPUT["✅ Output Ready"]
     
-    style INPUT fill:#238636
-    style CLASSIFY fill:#388bfd
-    style P2P fill:#1f6feb
-    style ONBOARD fill:#1f6feb
-    style LEGAL fill:#1f6feb
-    style EXPENSE fill:#1f6feb
-    style MEETING fill:#1f6feb
-    style RISK fill:#388bfd
-    style AMOUNT fill:#388bfd
-    style FORMULA fill:#388bfd
-    style KEYWORDS fill:#388bfd
-    style UPGRADE fill:#388bfd
-    style NOUPGRADE fill:#388bfd
-    style finalRISK fill:#388bfd
-    style LLMSELECT fill:#388bfd
-    style OPUS fill:#1f6feb
-    style HAIKU fill:#1f6feb
-    style LOG fill:#238636
-    style STATE fill:#3b434b
-    style OUTPUT fill:#238636
+    style INPUT fill:#0d1117,color:#fff
+    style CLASSIFY fill:#1f6feb,color:#fff
+    style RISK fill:#8957e5,color:#fff
+    style FORMULA fill:#8957e5,color:#fff
+    style FINALRISK fill:#1f6feb,color:#fff
+    style LLMSELECT fill:#1f6feb,color:#fff
+    style OPUS fill:#238636,color:#fff
+    style HAIKU fill:#238636,color:#fff
+    style LOG fill:#f59e0b,color:#000
+    style OUTPUT fill:#238636,color:#fff
 ```
 
 ---
@@ -863,27 +796,27 @@ graph TB
 
 ```mermaid
 graph LR
-    DECISION1["Decision #1<br/>COORDINATOR<br/>─<br/>Agent: Coordinator<br/>Event: Workflow Routed<br/>Details: p2p|risk:0.35|Haiku<br/>Timestamp: 1711046400<br/>─<br/>✅ Appended"]
+    D1["Decision 1<br/>Coordinator<br/>Workflow Routed<br/>risk 0.35<br/>model Haiku"]
     
-    DECISION1 -->|audit_log=[#1]| DECISION2["Decision #2<br/>EXTRACTION<br/>─<br/>Agent: Extraction<br/>Event: Structure Generated<br/>Details: Parsed 3 fields | 92%<br/>Confidence: 0.92<br/>Timestamp: 1711046401<br/>─<br/>✅ Appended"]
+    D1 -->|"log 1"| D2["Decision 2<br/>Extraction<br/>3 fields extracted<br/>confidence 92%"]
     
-    DECISION2 -->|audit_log=[#1,#2]| DECISION3["Decision #3<br/>MATCHING<br/>─<br/>Agent: Matching<br/>Event: Self-Correction Applied<br/>Details: PO-X → PO-5847 (97%)<br/>Correction_flag: true<br/>Timestamp: 1711046402<br/>─<br/>✅ Appended"]
+    D2 -->|"log 1,2"| D3["Decision 3<br/>Matching<br/>PO corrected<br/>confidence 97%"]
     
-    DECISION3 -->|audit_log=[#1,#2,#3]| DECISION4["Decision #4<br/>COMPLIANCE<br/>─<br/>Agent: Compliance<br/>Event: Audit Passed<br/>Details: All constraints verified<br/>Checks: vendor✓ budget✓ risk✓<br/>Timestamp: 1711046403<br/>─<br/>✅ Appended"]
+    D3 -->|"log 1,2,3"| D4["Decision 4<br/>Compliance<br/>All checks passed"]
     
-    DECISION4 -->|audit_log=[#1,#2,#3,#4]| DECISION5["Decision #5<br/>EXECUTION<br/>─<br/>Agent: Execution<br/>Event: Completed<br/>Details: Payment via ACH<br/>Transaction_id: TXN-5847<br/>Timestamp: 1711046404<br/>─<br/>✅ Appended"]
+    D4 -->|"log 1,2,3,4"| D5["Decision 5<br/>Execution<br/>Payment completed<br/>TXN 5847"]
     
-    DECISION5 -->|audit_log=[#1,#2,#3,#4,#5]| DECISION6["Decision #6<br/>HEALTH MONITOR<br/>─<br/>Agent: Health Monitor<br/>Event: System Performance Audit<br/>Metrics:<br/>  autonomy: 90%<br/>  sla: PASS<br/>  savings: $24.85<br/>  time: 4.5s<br/>Timestamp: 1711046405<br/>─<br/>✅ Appended"]
+    D5 -->|"log 1 to 5"| D6["Decision 6<br/>Health Monitor<br/>Autonomy 90%<br/>SLA PASS"]
     
-    DECISION6 -->|audit_log=[#1,#2,#3,#4,#5,#6]| FINAL["🎉 COMPLETE AUDIT TRAIL<br/>─<br/>6 Decisions Logged<br/>Full reasoning visible<br/>All corrections recorded<br/>All errors noted<br/>All metrics captured<br/>─<br/>Ready for compliance review"]
+    D6 --> FINAL["🎉 Complete Audit Trail<br/>6 decisions logged<br/>Fully traceable"]
     
-    style DECISION1 fill:#388bfd
-    style DECISION2 fill:#388bfd
-    style DECISION3 fill:#238636
-    style DECISION4 fill:#238636
-    style DECISION5 fill:#238636
-    style DECISION6 fill:#238636
-    style FINAL fill:#238636
+    style D1 fill:#1f6feb,color:#fff
+    style D2 fill:#1f6feb,color:#fff
+    style D3 fill:#238636,color:#fff
+    style D4 fill:#238636,color:#fff
+    style D5 fill:#238636,color:#fff
+    style D6 fill:#8957e5,color:#fff
+    style FINAL fill:#f59e0b,color:#000
 ```
 
 ---
