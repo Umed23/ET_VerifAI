@@ -863,7 +863,7 @@ graph TB
     
     style RAW fill:#3b434b
     style PDF fill:#3b434b
-    style PROCESS fill:#388bfd
+    style PROCESS fill:#3b434b
     style TEXT fill:#388bfd
     style CLASS fill:#388bfd
     style EXTRACT fill:#388bfd
