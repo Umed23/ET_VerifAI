@@ -126,7 +126,7 @@ python serve.py
 
 | Metric | Manual Process | VerifAI |
 |---|---|---|
-| **Cost per Document** | $25.00 | $0.15 |
+| **Cost per Document** | Rs 325.00 | Rs 45 |
 | **Processing Time** | 10 - 20 Minutes | < 10 Seconds |
 | **Autonomy Rate** | 0% | 90% - 100% |
 | **Error Rate** | High (Human Fatigue) | Low (Self-Healing) |
