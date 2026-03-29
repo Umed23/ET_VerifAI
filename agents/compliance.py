@@ -32,7 +32,7 @@ def compliance_agent(state: AgentState):
         # ONBOARDING (HR)
         # -------------------------
         elif w_type == "onboarding":
-            candidate = extracted.get("candidate_name")
+            candidate = extracted.get("candidate")
             
             if candidate:
                 policy_check = check_hr_policy.invoke({"candidate": candidate})

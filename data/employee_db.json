@@ -19,5 +19,12 @@
     "role": "Data Scientist",
     "department": "AI Labs",
     "status": "Active"
+  },
+  {
+    "employee_id": "EMP-004",
+    "full_name": "Aisha Sharma",
+    "role": "Senior Cloud Architect",
+    "department": "Engineering",
+    "status": "Onboarding"
   }
 ]

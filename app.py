@@ -972,6 +972,17 @@ if uploaded_file:
                             {action.get('details','—')}
                         </div>
                     </div>""", unsafe_allow_html=True)
+            elif status in ("ESCALATED", "WAITING_FOR_USER"):
+                st.markdown("""
+                <div class="health-issue" style="border-left:5px solid #f43f5e; background:rgba(244,63,94,0.06);">
+                    <div style="font-weight:700;color:#f43f5e;margin-bottom:10px;">
+                        ✋ Human Review Required
+                    </div>
+                    <div style="font-size:0.82rem;color:#94a3b8;">
+                        VerifAI has paused the autonomous pipeline and triggered the <b>Clarification Gate</b>. 
+                        This ensures data integrity by preventing hallucinations during low-confidence events.
+                    </div>
+                </div>""", unsafe_allow_html=True)
             else:
                 st.markdown("""
                 <div class="health-ok">

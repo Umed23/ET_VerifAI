@@ -99,8 +99,8 @@ workflow.add_conditional_edges("execution", router, {
     "end": END
 })
 
-# Both paths eventually lead to the Monitor for ROI reporting
-workflow.add_edge("clarification_gate", "monitor")
+# Both paths eventually lead to Execution/Monitor for persistence and ROI
+workflow.add_edge("clarification_gate", "execution")
 workflow.add_edge("monitor", END)
 
 app = workflow.compile()

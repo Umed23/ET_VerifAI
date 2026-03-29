@@ -18,11 +18,11 @@ def coordinator_agent(state: AgentState):
     max_amount = max(amounts) if amounts else 0
 
 # Classification Logic (Expanded)
-    if any(k in text for k in ["invoice", "total", "po#", "billing", "receipt"]):
-        w_type = "p2p"
-        confidence = 0.9
-    elif any(k in text for k in ["hire", "onboarding", "offer", "candidate", "employee"]):
+    if any(k in text for k in ["hire", "onboarding", "offer", "candidate", "employee", "onboarding form"]):
         w_type = "onboarding"
+        confidence = 0.95
+    elif any(k in text for k in ["invoice", "total", "po#", "billing", "receipt"]):
+        w_type = "p2p"
         confidence = 0.9
     elif any(k in text for k in ["contract", "nda", "agreement", "clause"]):
         w_type = "legal"

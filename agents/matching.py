@@ -14,7 +14,7 @@ def matching_agent(state: AgentState):
     if w_type == "p2p":
         target_field = "po_number"
     elif w_type == "onboarding":
-        target_field = "candidate_name"
+        target_field = "candidate"
     else:
         # For meetings or general tasks, no healing registry exists
         return {

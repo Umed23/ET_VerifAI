@@ -76,6 +76,21 @@ Thank you for using VerifAI.
     # FAILURE / ESCALATION
     # -------------------------------
     else:
+        # Save to DB even in failure path so it shows up in "everything"
+        db_path = f"data/{w_type}_final_records.json"
+        try:
+            records = []
+            if os.path.exists(db_path):
+                with open(db_path, 'r') as f:
+                    records = json.load(f)
+            
+            # Label as 'incomplete' or 'escalated' in the DB
+            records.append({**extracted, "processed_at": time.time(), "system_status": "ESCALATED"})
+            with open(db_path, 'w') as f:
+                json.dump(records, f, indent=4)
+        except Exception as e:
+            errors.append(f"DB Draft Save Error: {str(e)}")
+
         if not errors:
             errors = ["Missing or invalid data"]
 

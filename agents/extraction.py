@@ -20,7 +20,7 @@ def extraction_agent(state: AgentState):
     # 2. Define Business Rules for Validation
     validation_map = {
         "p2p": ["vendor", "amount", "po_number"],
-        "onboarding": ["candidate_name", "role", "start_date"],
+        "onboarding": ["candidate", "role", "start_date"],
         "legal": ["contract_type", "expiry_date"],
         "meeting": ["summary", "action_items"]
     }
@@ -59,9 +59,9 @@ def extraction_agent(state: AgentState):
         }
 
     # 4. Data Quality Gate (Missing Fields or Low Confidence)
-    missing = [f for f in required_fields if f not in extracted or not extracted[f]]
+    missing = [f for f in required_fields if f not in extracted or not extracted[f] or extracted[f] in ["UNKNOWN", "FAILURE", "ERROR"]]
 
-    if confidence < 0.6 or (w_type == "p2p" and not extracted.get("amount")):
+    if confidence < 0.6 or missing:
         log_entry = {
             "agent": "Extraction",
             "event": "Data Quality Alert",
@@ -70,6 +70,8 @@ def extraction_agent(state: AgentState):
         }
 
         return {
+            "extracted_data": extracted,
+            "confidence_score": confidence,
             "status": "escalated",
             "next_step": "clarification_gate",
             "current_agent": "Extraction",
