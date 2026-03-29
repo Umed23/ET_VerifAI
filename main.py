@@ -1,3 +1,7 @@
+import os
+from dotenv import load_dotenv
+load_dotenv()
+
 import sys
 import time
 from langgraph.graph import StateGraph, END
@@ -10,6 +14,12 @@ from agents.matching import matching_agent
 from agents.compliance import compliance_agent
 from agents.execution import execution_agent
 from agents.health_monitor import monitor_agent
+from agents.critic import critic_agent
+
+import os
+# Enable LangSmith
+os.environ["LANGCHAIN_TRACING_V2"] = "true"
+os.environ["LANGCHAIN_PROJECT"] = "VerifAI-Agent"
 
 # --- ✋ CLARIFICATION GATE (Human-in-the-Loop) ---
 def clarification_gate(state: AgentState):
@@ -27,7 +37,7 @@ def clarification_gate(state: AgentState):
     
     # We return the escalated status so the monitor can report it
     return {
-        "audit_log": current_logs + [log_entry], 
+        "audit_log": [log_entry], 
         "status": "escalated",
         "next_step": "monitor"
     }
@@ -41,6 +51,7 @@ workflow = StateGraph(AgentState)
 workflow.add_node("coordinator", coordinator_agent)
 workflow.add_node("extraction", extraction_agent)
 workflow.add_node("matching", matching_agent)
+workflow.add_node("critic", critic_agent)
 workflow.add_node("compliance", compliance_agent)
 workflow.add_node("execution", execution_agent)
 workflow.add_node("clarification_gate", clarification_gate)
@@ -59,22 +70,33 @@ def router(state: AgentState):
 
 workflow.add_conditional_edges("extraction", router, {
     "matching": "matching",
-    "clarification_gate": "clarification_gate"
+    "clarification_gate": "clarification_gate",
+    "end": END
 })
 
 workflow.add_conditional_edges("matching", router, {
+    "critic": "critic",
+    "clarification_gate": "clarification_gate",
+    "end": END
+})
+
+workflow.add_conditional_edges("critic", router, {
+    "extraction": "extraction",
     "compliance": "compliance",
-    "clarification_gate": "clarification_gate"
+    "clarification_gate": "clarification_gate",
+    "end": END
 })
 
 workflow.add_conditional_edges("compliance", router, {
     "execution": "execution",
-    "clarification_gate": "clarification_gate"
+    "clarification_gate": "clarification_gate",
+    "end": END
 })
 
 workflow.add_conditional_edges("execution", router, {
     "monitor": "monitor",
-    "clarification_gate": "clarification_gate"
+    "clarification_gate": "clarification_gate",
+    "end": END
 })
 
 # Both paths eventually lead to the Monitor for ROI reporting

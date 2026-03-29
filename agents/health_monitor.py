@@ -35,10 +35,10 @@ def monitor_agent(state: AgentState):
     sla_compliant = 0 < processing_time_sec < sla_limit
 
     # -------------------------
-    # 3. ROI CALCULATION
+    # 3. ROI CALCULATION (INR)
     # -------------------------
-    manual_cost = 25.00
-    ai_cost = 0.15 
+    manual_cost = 2000.00
+    ai_cost = 12.00 
     savings = manual_cost - ai_cost if status == "completed" else 0.00
 
     # -------------------------
@@ -52,7 +52,7 @@ def monitor_agent(state: AgentState):
             "autonomy_score": autonomy_score, # Pure Number
             "sla_status": "PASS" if sla_compliant else "FAIL",
             "processing_time_sec": round(processing_time_sec, 2),
-            "net_savings_usd": round(savings, 2),
+            "net_savings_inr": round(savings, 2),
             "self_healed_flag": corrections,
             "error_count": len(errors)
         },
@@ -65,7 +65,7 @@ def monitor_agent(state: AgentState):
     print(
         f"📊 REPORT: {w_type.upper()} | "
         f"Autonomy: {autonomy_score}% | "
-        f"Saved: ${round(savings, 2)} | "
+        f"Saved: ₹{round(savings, 2)} | "
         f"Time: {round(processing_time_sec, 2)}s"
     )
 
@@ -76,5 +76,5 @@ def monitor_agent(state: AgentState):
         "status": status,
         "current_agent": "Monitor",
         "next_step": "end",
-        "audit_log": current_logs + [log_entry]
+        "audit_log": [log_entry]
     }

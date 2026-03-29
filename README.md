@@ -1,49 +1,58 @@
 # VerifAI: Autonomous Enterprise Orchestrator
 **Track 2: Flagship Multi-Agent System**
 
-VerifAI is a self-healing, 6-agent autonomous system designed to bridge the gap between messy real-world documents and clean corporate data registries. Built with LangGraph, FAISS, and Sentence Transformers, it identifies, extracts, heals, and audits enterprise workflows with 99.4% cost-efficiency compared to manual processing.
+VerifAI is a self-healing, 7-agent autonomous system designed to bridge the gap between messy real-world documents and clean corporate data registries. Built with LangGraph, FAISS, and LangSmith observability, it identifies, extracts, heals, critiques, and audits enterprise workflows with 99.4% cost-efficiency compared to manual processing.
 
 ---
 
 ## 🚀 Key Features (The "Wow" Factor)
 
-- **🤖 6-Agent Orchestration**: A specialized team of AI workers (Coordinator, Extractor, Matcher, Auditor, Executor, and Monitor).
-- **🏥 Self-Healing Data (FAISS)**: Uses Semantic Vector Search to automatically correct typos (e.g., `PO-12B` → `PO-128`) without human intervention.
-- **⚖️ Universal Compliance**: Dynamically switches rule-sets between Finance (P2P) and HR (Onboarding).
-- **📩 Real-World Execution**: Integrated SMTP engine that sends automated success confirmations or "Action Required" requests for missing docs.
-- **📈 Executive ROI Dashboard**: Real-time tracking of Autonomy Scores, SLA compliance, and net dollar savings.
+- **🤖 7-Agent Orchestration**: A specialized hierarchy of AI workers (Coordinator, Extractor, Matcher, Critic, Auditor, Executor, and Monitor).
+- **🧐 Critic Reflexion Loop**: Advanced agentic design where the Critic evaluates the Extractor's output and loops back with specific feedback if data is missing or hallucinatory.
+- **🏥 Self-Healing Data (FAISS)**: Uses Semantic Vector Search to automatically correct typos (e.g., `PO-12B` → `PO-128`).
+- **📩 Real-World Execution**: Integrated Gmail API engine that sends automated success confirmations or "Action Required" requests.
+- **📈 Executive ROI Dashboard**: Glassmorphism Streamlit UI with Plotly gauges tracking Autonomy, SLA compliance, and net dollar savings.
 
 ---
 
 ## 🧠 System Architecture
 
-The Sentinel pipeline follows a strictly governed "Chain of Thought" architecture through 6 independent agents.
+The VerifAI pipeline follows a hierarchical, cyclic "Chain of Thought" architecture through 7 independent agents.
 
 ```mermaid
 graph TD
     User([User uploads Document]) --> Ext([Processor: Extract Text])
     Ext --> App[app.py / main.py]
     App --> A1[Agent 1: Coordinator<br>Classifies & Routes]
-    A1 --> A2[Agent 2: Extraction<br>Extracts JSON via LLM]
+    A1 --> A2[Agent 2: Extraction<br>Extracts JSON via Gemini 2.0]
     A2 -- Valid --> A3[Agent 3: Matching<br>Vector Self-Healing]
     A2 -- Invalid/Low Conf --> CG[Clarification Gate<br>Human in Loop]
-    A3 -- Healed --> A4[Agent 4: Compliance<br>Check Rules/Budgets]
-    A3 -- High Risk --> CG
-    A4 -- Passed --> A5[Agent 5: Execution<br>Update DB & Email]
+    A3 -- Success --> A7[Agent 7: Critic<br>Reflexion & Quality Gate]
+    A3 -- High Risk/Fail --> CG
+    A7 -- Retry/Fail --> A2
+    A7 -- Passed --> A4[Agent 4: Compliance<br>Check Rules/Budgets]
+    A7 -- Escalate --> CG
+    A4 -- Passed --> A5[Agent 5: Execution<br>Update DB & Gmail]
     A4 -- Failed --> CG
-    A5 -- Success --> A6[Agent 6: Health Monitor<br>Metrics & ROI]
+    A5 -- Success --> A6[Agent 6: Health Monitor<br>Metrics & LangSmith]
     A5 -- Error --> CG
     CG --> A6
     A6 --> End([End Workflow])
 ```
 
-### The 6 Agents Explained:
-1. **Coordinator (Agent 1)**: Classifies the document type and assesses initial risk.
+### ⚡ Quick View: Execution Flow
+- **Straight-Through Success 🟢**: Coordinator → Extraction → Matching (Self-Heals Data) → Critic (Approves Quality) → Compliance (Verifies Rules) → Execution (Logs & Emails) → Health Monitor (Calculates ROI).
+- **Reflexion Loop 🔁**: If the Critic (A7) detects low quality output or missing data, it will automatically loop back to re-run the Extraction (A2).
+- **Human-In-The-Loop ✋**: If confidence is too low or a critical business rule fails (like unapproved budget), the system safely routes to the **Clarification Gate** for human approval.
+
+### 🤖 The 7 Agents Explained:
+1. **Coordinator (Agent 1)**: Classifies the document type and routes dynamic models (Flash vs Pro).
 2. **Extraction (Agent 2)**: Natively parses PDF/Text into structured JSON.
 3. **Matching (Agent 3)**: The "Self-Healing" layer. Cross-references data against a Vector DB to fix OCR noise.
-4. **Compliance (Agent 4)**: The Judge. Enforces budgets, vendor approvals, and HR policies.
-5. **Execution (Agent 5)**: The Action layer. Updates the "Truth" databases and sends SMTP emails.
-6. **Health Monitor (Agent 6)**: The Accountant. Calculates ROI and generates the final performance audit.
+4. **Critic (Agent 7)**: The Supervisor. Evaluates extraction quality. Loops back to A2 if fields are missing.
+5. **Compliance (Agent 4)**: The Judge. Enforces budgets, vendor approvals, and HR policies.
+6. **Execution (Agent 5)**: The Action layer. Updates the "Truth" databases and sends Gmails.
+7. **Health Monitor (Agent 6)**: The Accountant. Calculates ROI and reports to LangSmith Trace.
 
 ---
 
@@ -52,7 +61,7 @@ graph TD
 - **Orchestration**: LangChain / LangGraph
 - **Vector Engine**: FAISS (Facebook AI Similarity Search)
 - **Embeddings**: `all-MiniLM-L6-v2` (Sentence Transformers)
-- **LLM**: Anthropic Claude 3 (Haiku/Opus)
+- **LLM**: Google Gemini 2.0 (Pro/Flash) / Anthropic Claude 3
 - **Frontend**: Streamlit
 - **Communication**: SMTP (Free Tier Optimized)
 - **Storage**: JSON-based "Flat File" DB for hackathon portability
@@ -99,10 +108,17 @@ python scripts/setup_vectors.py
 ```
 *(This will generate the required `.faiss` and `.json` registry files in the `data/` directory.)*
 
-**5. Launch the Dashboard**
+**5. Launch the Enterprise Interface (Streamlit)**
 ```bash
 streamlit run app.py
 ```
+
+**6. Launch the Headless REST API (Optional)**
+If you want to integrate VerifAI's agents into another application via LangServe:
+```bash
+python serve.py
+```
+*(The Swagger UI will be available at http://localhost:8000/docs)*
 
 ---
 

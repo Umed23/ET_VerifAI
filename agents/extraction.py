@@ -13,7 +13,7 @@ def extraction_agent(state: AgentState):
     # 1. Pull Context from Shared State
     w_type = state.get("workflow_type", "meeting")
     text = state.get("raw_input", "")
-    model = state.get("selected_llm", "Claude-3-Haiku")
+    model = state.get("selected_llm", "gemini-2.0-pro")
 
     print(f"--- 🔍 AGENT 2: EXTRACTING {w_type.upper()} DATA USING {model} ---")
 
@@ -48,13 +48,14 @@ def extraction_agent(state: AgentState):
         }
 
         # IMPORTANT: Append to previous logs, don't replace them
+        # IMPORTANT: Append to previous errors but ONLY return new audit_log entry
         return {
             "status": "failed",
             "next_step": "end",
             "current_agent": "Extraction",
             "retry_count": state.get("retry_count", 0) + 1,
             "errors": state.get("errors", []) + [str(e)],
-            "audit_log": state.get("audit_log", []) + [error_log]
+            "audit_log": [error_log]
         }
 
     # 4. Data Quality Gate (Missing Fields or Low Confidence)
@@ -72,7 +73,7 @@ def extraction_agent(state: AgentState):
             "status": "escalated",
             "next_step": "clarification_gate",
             "current_agent": "Extraction",
-            "audit_log": state.get("audit_log", []) + [log_entry]
+            "audit_log": [log_entry]
         }
 
     # 5. Success Path (Maintain Audit Integrity)
@@ -91,5 +92,5 @@ def extraction_agent(state: AgentState):
         "status": "processing",
         "current_agent": "Extraction",
         "next_step": "matching",
-        "audit_log": state.get("audit_log", []) + [log_entry]
+        "audit_log": [log_entry]
     }

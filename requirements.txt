@@ -1,20 +1,36 @@
-# --- Core Agent Orchestration (The "VerifAI" Brain) ---
-langgraph>=0.2.20
-langchain>=0.3.0
-langchain-community>=0.3.0
-langchain-google-genai
+# ============================================
+# VERIFAI: WORKING VERSIONS (2026-03-29)
+# ============================================
 
-# --- LLM & API ---
-google-genai
+# === Core Agent Orchestration ===
+langgraph>=0.0.35
+langchain>=0.1.0
+langchain-community>=0.0.35
+
+# === Google Gemini Integration ===
+langchain-google-genai>=0.1.0
+google-generativeai>=0.3.0
 python-dotenv>=1.0.1
 
-# --- Data Processing & Vector Search (Self-Healing) ---
+# === Data Processing & Vector Search ===
 faiss-cpu>=1.8.0
 sentence-transformers>=3.0.0
 pypdf>=4.2.0
 python-docx>=1.1.0
 
-# --- Validation & UI ---
+# === Validation & UI ===
 pydantic>=2.7.0
 streamlit>=1.35.0
 pandas>=2.2.0
+
+# === Observability & Deployment ===
+langsmith>=0.1.0
+plotly>=5.18.0
+langserve>=0.0.51
+fastapi>=0.100.0
+uvicorn>=0.23.0
+
+# === Testing & Utilities ===
+pytest>=8.0.0
+google-auth-httplib2>=0.2.0
+google-auth-oauthlib>=1.2.0

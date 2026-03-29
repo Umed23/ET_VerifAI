@@ -53,7 +53,7 @@ def compliance_agent(state: AgentState):
                 "status": "processing",
                 "current_agent": "Compliance",
                 "next_step": "execution",
-                "audit_log": current_logs + [log_entry]
+                "audit_log": [log_entry]
             }
 
     except Exception as e:
@@ -85,7 +85,7 @@ def compliance_agent(state: AgentState):
             "status": "processing",
             "current_agent": "Compliance",
             "next_step": "execution",
-            "audit_log": current_logs + [log_entry]
+            "audit_log": [log_entry]
         }
 
     log_entry = {
@@ -100,5 +100,5 @@ def compliance_agent(state: AgentState):
         "current_agent": "Compliance",
         "next_step": "clarification_gate",
         "errors": state.get("errors", []) + violations,
-        "audit_log": current_logs + [log_entry]
+        "audit_log": [log_entry]
     }

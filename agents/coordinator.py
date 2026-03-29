@@ -9,7 +9,8 @@ def coordinator_agent(state: AgentState):
     if not state.get("raw_input"):
         return {"error": "No input provided"}
 
-    text = state["raw_input"].lower()
+    file_name = state.get("file_name", "").lower()
+    text = f"{file_name} " + state["raw_input"].lower()
 
     # look for numbers that follow a currency symbol or are > 3 digits
     amounts = re.findall(r'(?:₹|\$|rs\.?|usd)\s*(\d[\d,]*)', text)
@@ -17,16 +18,16 @@ def coordinator_agent(state: AgentState):
     max_amount = max(amounts) if amounts else 0
 
 # Classification Logic (Expanded)
-    if any(k in text for k in ["invoice", "total", "po#", "billing"]):
+    if any(k in text for k in ["invoice", "total", "po#", "billing", "receipt"]):
         w_type = "p2p"
         confidence = 0.9
-    elif any(k in text for k in ["hire", "onboarding", "offer", "candidate"]):
+    elif any(k in text for k in ["hire", "onboarding", "offer", "candidate", "employee"]):
         w_type = "onboarding"
         confidence = 0.9
     elif any(k in text for k in ["contract", "nda", "agreement", "clause"]):
         w_type = "legal"
         confidence = 0.85
-    elif any(k in text for k in ["reimbursement", "travel", "receipt", "expense"]):
+    elif any(k in text for k in ["reimbursement", "travel", "expense"]):
         w_type = "expense"
         confidence = 0.88
     else:
@@ -40,7 +41,8 @@ def coordinator_agent(state: AgentState):
     risk = min(risk, 1.0)
 
     # Model routing
-    selected_llm = "gemini-2.5-pro" if risk > 0.8 else "gemini-2.5-flash"
+    # Updated Model Selection for Gemini API
+    selected_llm = "gemini-2.0-pro" if risk > 0.8 else "gemini-2.0-flash"
 
     log_entry = {
         "agent": "Coordinator",

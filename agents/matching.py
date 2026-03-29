@@ -20,8 +20,8 @@ def matching_agent(state: AgentState):
         return {
             "status": "processing",
             "current_agent": "Matching",
-            "next_step": "compliance",
-            "audit_log": current_logs + [{"agent": "Matching", "event": "Skipped", "details": f"No matching registry for {w_type}."}]
+            "next_step": "critic",
+            "audit_log": [{"agent": "Matching", "event": "Skipped", "details": f"No matching registry for {w_type}."}]
         }
 
     query_value = extracted.get(target_field, "")
@@ -31,8 +31,8 @@ def matching_agent(state: AgentState):
         return {
             "status": "processing",
             "current_agent": "Matching",
-            "next_step": "compliance",
-            "audit_log": current_logs + [{"agent": "Matching", "event": "Skipped", "details": f"Target field '{target_field}' empty."}]
+            "next_step": "critic",
+            "audit_log": [{"agent": "Matching", "event": "Skipped", "details": f"Target field '{target_field}' empty."}]
         }
 
     # 3. CALL UNIVERSAL FAISS TOOL
@@ -46,7 +46,7 @@ def matching_agent(state: AgentState):
             "status": "failed",
             "next_step": "end",
             "errors": state.get("errors", []) + [str(e)],
-            "audit_log": current_logs
+            "audit_log": []
         }
 
     best_match = result.get("match")
@@ -69,7 +69,7 @@ def matching_agent(state: AgentState):
             "status": "escalated",
             "current_agent": "Matching",
             "next_step": "clarification_gate",
-            "audit_log": current_logs + [{
+            "audit_log": [{
                 "agent": "Matching",
                 "event": "Match Failed",
                 "details": f"Low confidence for {query_value} ({confidence*100:.1f}%)",
@@ -90,6 +90,6 @@ def matching_agent(state: AgentState):
         "correction_flag": state.get("correction_flag", False) or correction,
         "status": "processing",
         "current_agent": "Matching",
-        "next_step": "compliance",
-        "audit_log": current_logs + [log_entry]
+        "next_step": "critic",
+        "audit_log": [log_entry]
     }

@@ -116,7 +116,7 @@ Ref: VerifAI-{int(time.time())}
     return {
         "status": final_status,
         "current_agent": "Execution",
-        "next_step": "end",
+        "next_step": "monitor",
         "errors": errors,
-        "audit_log": current_logs + [log_entry]
+        "audit_log": [log_entry]
     }
